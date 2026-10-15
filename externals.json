@@ -12,5 +12,12 @@
     "url": "https://motion-reference.takayustudio.jp/",
     "image": "https://motion-reference.takayustudio.jp/assets/og-image.png",
     "note": "Motion and easing dictionary: 782 demos searchable by name, speed, easing and feel. UI, games, scroll, forms, gestures, SVG, principles, springs, camera and transitions; 228 text motions with CSS, GSAP and After Effects how-tos. (Japanese)"
+  },
+  {
+    "id": "x1792099105041",
+    "name": "Prompt Motion",
+    "url": "https://prompt-motion.com/?tag=charts",
+    "image": "https://prompt-motion.com/opengraph-image.png?opengraph-image.2gf6gr-qminy7.png",
+    "note": "A collection of motion videos made with Claude Opus 5.5, with the prompts and skills behind them."
   }
 ]
