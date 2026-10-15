@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Opus 5.5 Motion Graphics Library</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      margin: 0;
+      padding: 20px;
+      line-height: 1.5;
+    }
+    h1 { text-align: center; font-weight: 600; margin-bottom: 4px; }
+    .subtitle { text-align: center; color: #888; margin-bottom: 24px; font-size: 0.95rem; }
+    .controls {
+      max-width: 1400px;
+      margin: 0 auto 24px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+    }
+    button, .file-label {
+      background: #222;
+      color: #ddd;
+      border: 1px solid #444;
+      border-radius: 6px;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    button:hover, .file-label:hover { background: #333; }
+    .add-form {
+      max-width: 900px;
+      margin: 0 auto 32px;
+      background: #161616;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 16px;
+      display: none;
+    }
+    .add-form.open { display: block; }
+    .add-form h3 { margin: 0 0 12px; font-size: 1rem; }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+    input, textarea {
+      width: 100%;
+      background: #0f0f0f;
+      border: 1px solid #333;
+      color: #eee;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 0.9rem;
+    }
+    textarea { grid-column: 1 / -1; min-height: 60px; resize: vertical; }
+    .form-actions { margin-top: 12px; display: flex; gap: 8px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .card {
+      background: #161616;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: border-color 0.2s, opacity 0.2s;
+    }
+    .card:hover { border-color: #444; }
+    video { width: 100%; height: auto; background: #000; display: block; }
+    .info { padding: 14px 16px 16px; }
+    .info h3 { margin: 0 0 6px; font-size: 1rem; font-weight: 600; }
+    .meta {
+      font-size: 0.85rem;
+      color: #999;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .meta a { color: #6ea8fe; text-decoration: none; }
+    .meta a:hover { text-decoration: underline; }
+    .likes { color: #ff6b6b; font-weight: 500; }
+    .desc { font-size: 0.9rem; color: #ccc; margin-bottom: 12px; }
+    .remove-btn {
+      background: #2a2a2a;
+      color: #aaa;
+      border: 1px solid #444;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .remove-btn:hover { background: #3a1a1a; color: #ff6b6b; border-color: #ff6b6b; }
+    .empty { text-align: center; color: #666; padding: 40px; }
+  </style>
+</head>
+<body>
+  <h1>Opus 5.5 Motion Graphics Library</h1>
+  <p class="subtitle">Add, remove, and keep your collection. Data is saved in this browser.</p>
+
+  <div class="controls">
+    <button id="toggleAdd">+ Add video</button>
+    <button id="exportBtn">Export JSON</button>
+    <label class="file-label">
+      Import JSON
+      <input type="file" id="importFile" accept=".json" hidden>
+    </label>
+    <button id="clearAll" style="color:#ff6b6b;">Clear all</button>
+  </div>
+
+  <div class="add-form" id="addForm">
+    <h3>Add a new video</h3>
+    <div class="form-grid">
+      <input id="fTitle" placeholder="Title" required>
+      <input id="fAuthor" placeholder="Author (@handle)">
+      <input id="fLikes" type="number" placeholder="Likes" min="0">
+      <input id="fPost" placeholder="X post URL">
+      <input id="fVideo" placeholder="Direct MP4 URL (video.twimg.com/...)" required>
+      <textarea id="fDesc" placeholder="Short description"></textarea>
+    </div>
+    <div class="form-actions">
+      <button id="saveVideo">Save video</button>
+      <button id="cancelAdd" type="button">Cancel</button>
+    </div>
+  </div>
+
+  <div class="grid" id="library"></div>
+
+  <script>
+    const STORAGE_KEY = 'opus55-motion-library';
+    const defaultVideos = [
+      {
+        id: 'logo',
+        title: 'Logo Animation',
+        author: '@calvino_antonio',
+        post: 'https://x.com/calvino_antonio/status/2110305554606485566',
+        video: 'https://video.twimg.com/amplify_video/2110304946839003136/vid/avc1/1080x1080/pgVWdnzybQ3IB6tt.mp4',
+        likes: 3,
+        desc: 'Logo animation made with Opus 5.5 for a trading-card brand symbol.'
+      },
+      {
+        id: 'reverse',
+        title: 'Reverse-Engineered Style',
+        author: '@iamsupersocks',
+        post: 'https://x.com/iamsupersocks/status/2110307821015248992',
+        video: 'https://video.twimg.com/amplify_video/2110307707047550976/vid/avc1/1080x1920/rla9q9CrxNNSvlE4.mp4',
+        likes: 5,
+        desc: 'Reverse engineering a video style with REA + HyperFrames + Opus 5.5 + local voice models.'
+      },
+      {
+        id: 'styles35',
+        title: '35 Motion Design Styles',
+        author: '@Ning38610511261',
+        post: 'https://x.com/Ning38610511261/status/2110256218271006858',
+        video: 'https://video.twimg.com/amplify_video/2110256102680178688/vid/avc1/1280x720/ARzDx9yXXtN1wWk6.mp4',
+        likes: 0,
+        desc: '35 styles, every frame rendered from pure code. 5 parallel agents with style specs and revise loop.'
+      },
+      {
+        id: 'vs-argon',
+        title: 'Opus vs Argon Product Film',
+        author: '@daniel_haida',
+        post: 'https://x.com/daniel_haida/status/2110275966094454864',
+        video: 'https://video.twimg.com/amplify_video/2110275222553378817/vid/avc1/1080x1920/dLYoRvtFlaLXi-ls.mp4',
+        likes: 0,
+        desc: 'Same Remotion product-film brief. Opus stronger on cinematic camera; Argon better UI fidelity.'
+      },
+      {
+        id: 'anime',
+        title: 'Anime Opening Edit',
+        author: '@aimikoda',
+        post: 'https://x.com/aimikoda/status/2110119492076404869',
+        video: 'https://video.twimg.com/amplify_video/2110118417697054720/vid/avc1/1920x1080/6uygBcr7gFSbZfIN.mp4',
+        likes: 447,
+        desc: 'Seedance 2.5 video re-cut to the beat by Opus 5.5 with impact frames, motion graphics, title, and music composed in code.'
+      },
+      {
+        id: 'launch',
+        title: 'Product Launch Video',
+        author: '@SanskritiSriv_',
+        post: 'https://x.com/SanskritiSriv_/status/2110284838200827971',
+        video: 'https://video.twimg.com/amplify_video/2110284738636521472/vid/avc1/1280x720/fanMl2MrRTyC92PY.mp4',
+        likes: 1,
+        desc: 'Full product launch video made completely with Opus 5.5 in under 3 hours.'
+      },
+      {
+        id: 'copyjump',
+        title: 'CopyJump Motion Video',
+        author: '@morganhvidt',
+        post: 'https://x.com/morganhvidt/status/2110273581712380321',
+        video: 'https://video.twimg.com/amplify_video/2110272972644835329/vid/avc1/1280x720/6pX3pEih_GiS3EtH.mp4',
+        likes: 1,
+        desc: 'Motion video for CopyJump made with Opus 5.5.'
+      },
+      {
+        id: 'fiverr',
+        title: 'Fiverr Gig Motion',
+        author: '@nimi_101',
+        post: 'https://x.com/nimi_101/status/2110266591229235258',
+        video: 'https://video.twimg.com/amplify_video/2110265757191852032/vid/avc1/1920x1080/v6yR2LVUxm66NLUU.mp4',
+        likes: 12,
+        desc: 'New Fiverr gig video created with Opus 5.5.'
+      },
+      {
+        id: 'music',
+        title: 'Music Video (Sound/Vision)',
+        author: '@atomtanstudio',
+        post: 'https://x.com/atomtanstudio/status/2110268034296521170',
+        video: 'https://video.twimg.com/amplify_video/2110267910388363264/vid/avc1/1280x720/JlzhkhnlC5_LhwOH.mp4',
+        likes: 1,
+        desc: 'Motion graphics music video created with Opus 5.5 using their Sound/Vision app.'
+      }
+    ];
+
+    function loadVideos() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [...defaultVideos];
+      } catch {
+        return [...defaultVideos];
+      }
+    }
+
+    function saveVideos(videos) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(videos));
+    }
+
+    function render(videos) {
+      const container = document.getElementById('library');
+      if (!videos.length) {
+        container.innerHTML = '<div class="empty">No videos yet. Click “+ Add video”.</div>';
+        return;
+      }
+      container.innerHTML = videos.map(v => `
+        <div class="card" data-id="${v.id}">
+          <video controls preload="metadata">
+            <source src="${v.video}" type="video/mp4">
+          </video>
+          <div class="info">
+            <h3>${escapeHtml(v.title)}</h3>
+            <div class="meta">
+              <span>${escapeHtml(v.author || '')} ${v.post ? `· <a href="${v.post}" target="_blank">Post</a>` : ''}</span>
+              <span class="likes">♥ ${v.likes || 0}</span>
+            </div>
+            <div class="desc">${escapeHtml(v.desc || '')}</div>
+            <button class="remove-btn" data-id="${v.id}">Remove</button>
+          </div>
+        </div>
+      `).join('');
+
+      container.querySelectorAll('.remove-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.id;
+          const next = loadVideos().filter(v => v.id !== id);
+          saveVideos(next);
+          render(next);
+        });
+      });
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&')
+        .replace(/</g, '<')
+        .replace(/>/g, '>')
+        .replace(/"/g, '"');
+    }
+
+    // Init
+    let videos = loadVideos();
+    render(videos);
+
+    // Add form toggle
+    document.getElementById('toggleAdd').addEventListener('click', () => {
+      document.getElementById('addForm').classList.toggle('open');
+    });
+    document.getElementById('cancelAdd').addEventListener('click', () => {
+      document.getElementById('addForm').classList.remove('open');
+    });
+
+    document.getElementById('saveVideo').addEventListener('click', () => {
+      const title = document.getElementById('fTitle').value.trim();
+      const video = document.getElementById('fVideo').value.trim();
+      if (!title || !video) {
+        alert('Title and video URL are required.');
+        return;
+      }
+      const newVideo = {
+        id: 'v' + Date.now(),
+        title,
+        author: document.getElementById('fAuthor').value.trim(),
+        post: document.getElementById('fPost').value.trim(),
+        video,
+        likes: parseInt(document.getElementById('fLikes').value, 10) || 0,
+        desc: document.getElementById('fDesc').value.trim()
+      };
+      videos = [newVideo, ...loadVideos()];
+      saveVideos(videos);
+      render(videos);
+      document.getElementById('addForm').classList.remove('open');
+      document.querySelectorAll('#addForm input, #addForm textarea').forEach(el => el.value = '');
+    });
+
+    // Export
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(loadVideos(), null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'opus55-library.json';
+      a.click();
+    });
+
+    // Import
+    document.getElementById('importFile').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const imported = JSON.parse(reader.result);
+          if (!Array.isArray(imported)) throw new Error('Not an array');
+          if (confirm(`Replace current library with ${imported.length} videos?`)) {
+            saveVideos(imported);
+            videos = imported;
+            render(videos);
+          }
+        } catch {
+          alert('Invalid JSON file.');
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    });
+
+    // Clear
+    document.getElementById('clearAll').addEventListener('click', () => {
+      if (confirm('Delete all videos from this library?')) {
+        saveVideos([]);
+        videos = [];
+        render(videos);
+      }
+    });
+  </script>
+</body>
+</html>
