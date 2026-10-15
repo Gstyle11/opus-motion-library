@@ -1,0 +1,178 @@
+[
+  {
+    "id": "2110408774737432738",
+    "title": "this is pure f*cking treasure",
+    "author": "@beamnxw",
+    "post": "https://x.com/beamnxw/status/2110408774737432738",
+    "video": "https://video.twimg.com/amplify_video/2110406118308466688/vid/avc1/720x784/-4glOrxYZIO6Ry-F.mp4?tag=29",
+    "poster": "https://pbs.twimg.com/amplify_video_thumb/2110406118308466688/img/X_XTY27hlzcOf5-i.jpg",
+    "duration": 20,
+    "likes": 675,
+    "desc": "this is pure f*cking treasure\n\n20 GitHub repos to build your own motion design studio with Opus 5.5\n\nstoryboards. typography. assets. character states. keyframes. 3D. rendering\n\nhere’s the stack from the first sketch to the final frame\n\nDESIGN + STORYBOARD\n01 Penpot\nhttps://github.com/penpot/penpot → layouts and reusable components  \n02 Excalidraw\nhttps://github.com/excalidraw/excalidraw → sketch the storyboard  \n03 Fontsource\nhttps://github.com/fontsource/fontsource → self-host your fonts  \n04 Lucide\nhttps://github.com/lucide-icons/lucide → consistent SVG icons\n\nASSETS + CHARACTER ANIMATION\n05 SVGO\nhttps://github.com/svg/svgo → clean the vector assets  \n06 sharp\nhttps://github.com/lovell/sharp → resize, crop, and prepare images  \n07 Lottie-web\nhttps://github.com/airbnb/lottie-web → play vector animations  \n08 Rive Web\nhttps://github.com/rive-app/rive-wasm → control character states\n\nTIMELINES + CHOREOGRAPHY\n09 Motion\nhttps://github.com/motiondivision/motion → springs and layout transitions  \n10 GSAP\nhttps://github.com/greensock/GSAP → direct complex timelines  \n11 Anime.js\nhttps://github.com/juliangarnier/anime → choreograph SVG and objects  \n12 Theatre.js\nhttps://github.com/theatre-js/theatre → tune motion visually\n\n3D + VISUAL POLISH\n13 Three.js\nhttps://github.com/mrdoob/three.js → build the 3D scene  \n14 React Three Fiber\nhttps://github.com/pmndrs/react-three-fiber → compose 3D in React  \n15 Drei\nhttps://github.com/pmndrs/drei → cameras, lighting, and staging  \n16 Postprocessing\nhttps://github.com/pmndrs/postprocessing → bloom and color grading\n\nPRODUCTION + EXPORT\n17 Remotion\nhttps://github.com/remotion-dev/remotion → compose and render the video  \n18 Remotion Skills\nhttps://github.com/remotion-dev/skills → give Claude Code the production playbook  \n19 FFmpeg\nhttps://github.com/FFmpeg/FFmpeg → encode and package the output  \n20 Mediabunny\nhttps://github.com/Vanilagy/mediabunny → build browser media pipelines\n\nstart with Remotion + its skills\n\nchoose the assets, motion engine, and 3D modules your project needs\n\nthe clever part:\n\nthe composition lives in code\nchange the copy, colors, timing, or format → render the next version\n\nthe loop:\n\nbrief → storyboard → assets → layout → animate → add depth → preview → refine → render\n\nsave this, then read the full guide for Opus 5.5 Motion Engineering ↓"
+  },
+  {
+    "id": "2107889204198064210",
+    "title": "I tried it to build a restaurant management simulation game with @t…",
+    "author": "@alexcooldev",
+    "post": "https://x.com/alexcooldev/status/2107889204198064210",
+    "video": "https://video.twimg.com/amplify_video/2107888732733087745/vid/avc1/698x360/R_N_d9n_JTpPCAAp.mp4?tag=29",
+    "poster": "https://pbs.twimg.com/amplify_video_thumb/2107888732733087745/img/5b__MqAMN36YQVpI.jpg",
+    "duration": 119.97,
+    "likes": 369,
+    "desc": "I tried it to build a restaurant management simulation game with @threejs, and it works really well. I’ll publish it soon. 😌"
+  },
+  {
+    "id": "2110658198579335394",
+    "title": "my Claude videos used to look generic",
+    "author": "@francescoinweb3",
+    "post": "https://x.com/francescoinweb3/status/2110658198579335394",
+    "video": "https://video.twimg.com/amplify_video/2110657525016068096/vid/avc1/1080x1350/VYo9QEb4vw7C_179.mp4?tag=29",
+    "poster": "https://pbs.twimg.com/amplify_video_thumb/2110657525016068096/img/wSgOH3MJb2a_cZTb.jpg",
+    "duration": 24,
+    "likes": 103,
+    "desc": "my Claude videos used to look generic\n\nclean, smooth and completely forgettable\n\nthe problem wasn’t the model. I was typing “make me a video about X” and hoping for the best\n\n now every video goes through the same 6 steps:\n\n > reference\nI show Claude a video I actually like. it breaks down why it works: the pacing, where the first motion lands, how the text comes in, the cut rhythm\nthis one step fixes most of the generic look\n\n>  data\nreal numbers before anything moves. every figure has a source\na wrong number in a beautiful animation is still wrong, it just looks more convincing\n\n> story\none point, one hero number, three beats\nwritten before any motion, so the video is about something\n\n> motion\nClaude writes the animation as code with Remotion and a motion-design skill\nno video model, so every word, number and timing stays editable\n\n > direct\nI don’t re-prompt. I just say what’s off:\n“title is a beat late”  one line changes\n“draw the line slower”  one line changes\nnothing else breaks\n\n ship\nit renders stills, checks them against the reference and the data\nnothing goes out until I approve it\n\n> most people jump straight to step 4 and wonder why it looks like everyone else’s\n\nthe real difference is step 1 and step 5: copy what works, then direct instead of re-rolling\n\nfull setup, the prompt and the 10 open-source skills are in the article"
+  },
+  {
+    "id": "2110394800411185404",
+    "title": "GPT-6 Astra vs Human in After Effects",
+    "author": "@AmirMushich",
+    "post": "https://x.com/AmirMushich/status/2110394800411185404",
+    "video": "https://video.twimg.com/amplify_video/2110394101753372673/vid/avc1/960x720/pjyjeqFfwGcGNmu9.mp4?tag=29",
+    "poster": "https://pbs.twimg.com/amplify_video_thumb/2110394101753372673/img/PqBxNHPm6bUQfWRq.jpg",
+    "duration": 15.516,
+    "likes": 488,
+    "desc": "GPT-6 Astra vs Human in After Effects\n(motion design test)\n\nI uploaded my flash-cut video to Codex and asked to analyze it & rebuild in Ae\nSame footages & SFX, no additional instructions, 1 take. Will Opus 5.5 do better? \n\nAe project 👇"
+  },
+  {
+    "id": "2110717372734525759",
+    "title": "You no longer need After Effects for 3D product animations if you u…",
+    "author": "@0xkerazcity",
+    "post": "https://x.com/0xkerazcity/status/2110717372734525759",
+    "video": "https://video.twimg.com/amplify_video/2110715343089831936/vid/avc1/1280x720/3lZ8UbCoSrnWd6sx.mp4?tag=29",
+    "poster": "https://pbs.twimg.com/amplify_video_thumb/2110715343089831936/img/fuKjUgLmXBf3biG7.jpg",
+    "duration": 16,
+    "likes": 18,
+    "desc": "You no longer need After Effects for 3D product animations if you use Claude Opus 5.5 correctly\n\nIt's f*cking unreal…\n\nSend PDF below to Opus 5.5, and thank me later.\n\nThen save the article on the Opus 5.5 best practices and usage for motion design."
+  },
+  {
+    "id": "2110389810258968965",
+    "title": "You can really build anything now",
+    "author": "@LexnLin",
+    "post": "https://x.com/LexnLin/status/2110389810258968965",
+    "video": "https://video.twimg.com/amplify_video/2110389703232917504/vid/avc1/1280x720/x8ie4J3ilmx97hjr.mp4?tag=29",
+    "poster": "https://pbs.twimg.com/amplify_video_thumb/2110389703232917504/img/6m7l19ZJz0CnOC8A.jpg",
+    "duration": 60,
+    "likes": 2623,
+    "desc": "You can really build anything now\n\nClawd animation made with Opus 5.5 Ultracode. \n\nimproved sfx!"
+  },
+  {
+    "id": "2110770664101527568",
+    "title": "Opus 5.5 just animated a keyboard better than my After Effects ever…",
+    "author": "@seeconvm",
+    "post": "https://x.com/seeconvm/status/2110770664101527568",
+    "video": "https://video.twimg.com/amplify_video/2110770499244408832/vid/avc1/1080x1350/ZPGEhgEeXGoAk05J.mp4?tag=29",
+    "poster": "https://pbs.twimg.com/amplify_video_thumb/2110770499244408832/img/aNU3zB7UsagBnHuZ.jpg",
+    "duration": 12,
+    "likes": 23,
+    "desc": "Opus 5.5 just animated a keyboard better than my After Effects ever did\n\nno keyframes, no timeline…\n\nDrop the PDF below into Opus 5.5 and watch it type.\n\nThen save the article, it’s the only Opus 5.5 motion design playbook you’ll need."
+  },
+  {
+    "id": "logo",
+    "title": "Logo Animation",
+    "author": "@calvino_antonio",
+    "post": "https://x.com/calvino_antonio/status/2110305554606485566",
+    "video": "https://video.twimg.com/amplify_video/2110304946839003136/vid/avc1/1080x1080/pgVWdnzybQ3IB6tt.mp4?tag=29",
+    "poster": "https://pbs.twimg.com/amplify_video_thumb/2110304946839003136/img/8UxXBKUurFBPsoMv.jpg",
+    "duration": 5.1,
+    "likes": 20,
+    "desc": "Logo animation made with Opus 5.5 for a trading-card brand symbol."
+  },
+  {
+    "id": "reverse",
+    "title": "Reverse-Engineered Style",
+    "author": "@iamsupersocks",
+    "post": "https://x.com/iamsupersocks/status/2110307821015248992",
+    "video": "https://video.twimg.com/amplify_video/2110307707047550976/vid/avc1/1080x1920/rla9q9CrxNNSvlE4.mp4?tag=29",
+    "poster": "https://pbs.twimg.com/amplify_video_thumb/2110307707047550976/img/lGvf3RC4csUbUDT8.jpg",
+    "duration": 72.1,
+    "likes": 50,
+    "desc": "Reverse engineering a video style with REA + HyperFrames + Opus 5.5 + local voice models."
+  },
+  {
+    "id": "styles35",
+    "title": "35 Motion Design Styles",
+    "author": "@Ning38610511261",
+    "post": "https://x.com/Ning38610511261/status/2110256218271006858",
+    "video": "https://video.twimg.com/amplify_video/2110256102680178688/vid/avc1/1280x720/ARzDx9yXXtN1wWk6.mp4?tag=14",
+    "poster": "https://pbs.twimg.com/amplify_video_thumb/2110256102680178688/img/F2KQOzmvSy2WDz-Q.jpg",
+    "duration": 60,
+    "likes": 1,
+    "desc": "35 styles, every frame rendered from pure code. 5 parallel agents with style specs and revise loop."
+  },
+  {
+    "id": "vs-argon",
+    "title": "Opus vs Argon Product Film",
+    "author": "@daniel_haida",
+    "post": "https://x.com/daniel_haida/status/2110275966094454864",
+    "video": "https://video.twimg.com/amplify_video/2110275222553378817/vid/avc1/1080x1920/dLYoRvtFlaLXi-ls.mp4?tag=29",
+    "poster": "https://pbs.twimg.com/amplify_video_thumb/2110275222553378817/img/lCFNd0eGzofkXV8I.jpg",
+    "duration": 14,
+    "likes": 2,
+    "desc": "Same Remotion product-film brief. Opus stronger on cinematic camera; Argon better UI fidelity."
+  },
+  {
+    "id": "anime",
+    "title": "Anime Opening Edit",
+    "author": "@aimikoda",
+    "post": "https://x.com/aimikoda/status/2110119492076404869",
+    "video": "https://video.twimg.com/amplify_video/2110118417697054720/vid/avc1/1280x720/s4mvd0F_GLtVJd-9.mp4?tag=29",
+    "poster": "https://pbs.twimg.com/amplify_video_thumb/2110118417697054720/img/7Eycu37NGlkJY0FD.jpg",
+    "duration": 32,
+    "likes": 761,
+    "desc": "Seedance 2.5 video re-cut to the beat by Opus 5.5 with impact frames, motion graphics, title, and music composed in code."
+  },
+  {
+    "id": "launch",
+    "title": "Product Launch Video",
+    "author": "@SanskritiSriv_",
+    "post": "https://x.com/SanskritiSriv_/status/2110284838200827971",
+    "video": "https://video.twimg.com/amplify_video/2110284738636521472/vid/avc1/1280x720/fanMl2MrRTyC92PY.mp4?tag=29",
+    "poster": "https://pbs.twimg.com/amplify_video_thumb/2110284738636521472/img/VEVMMY-vamiNoOdi.jpg",
+    "duration": 82.454,
+    "likes": 1,
+    "desc": "Full product launch video made completely with Opus 5.5 in under 3 hours."
+  },
+  {
+    "id": "copyjump",
+    "title": "CopyJump Motion Video",
+    "author": "@morganhvidt",
+    "post": "https://x.com/morganhvidt/status/2110273581712380321",
+    "video": "https://video.twimg.com/amplify_video/2110272972644835329/vid/avc1/1280x720/6pX3pEih_GiS3EtH.mp4?tag=14",
+    "poster": "https://pbs.twimg.com/amplify_video_thumb/2110272972644835329/img/XLebiqmseAQPqOlL.jpg",
+    "duration": 53.6,
+    "likes": 1,
+    "desc": "Motion video for CopyJump made with Opus 5.5."
+  },
+  {
+    "id": "fiverr",
+    "title": "Fiverr Gig Motion",
+    "author": "@nimi_101",
+    "post": "https://x.com/nimi_101/status/2110266591229235258",
+    "video": "https://video.twimg.com/amplify_video/2110265757191852032/vid/avc1/1280x720/WgEHRMdVzVDjg7mR.mp4?tag=29",
+    "poster": "https://pbs.twimg.com/amplify_video_thumb/2110265757191852032/img/KnCRUOtdJKzXL644.jpg",
+    "duration": 62,
+    "likes": 17,
+    "desc": "New Fiverr gig video created with Opus 5.5."
+  },
+  {
+    "id": "music",
+    "title": "Music Video (Sound/Vision)",
+    "author": "@atomtanstudio",
+    "post": "https://x.com/atomtanstudio/status/2110268034296521170",
+    "video": "https://video.twimg.com/amplify_video/2110267910388363264/vid/avc1/1280x720/JlzhkhnlC5_LhwOH.mp4?tag=29",
+    "poster": "https://pbs.twimg.com/amplify_video_thumb/2110267910388363264/img/d8LVbAI7NjZr37Rf.jpg",
+    "duration": 181.633,
+    "likes": 2,
+    "desc": "Motion graphics music video created with Opus 5.5 using their Sound/Vision app."
+  }
+]
