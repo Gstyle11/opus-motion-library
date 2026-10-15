@@ -1,0 +1,40 @@
+# One-call door for agents and the GitHub app: send X links, they land in library.json.
+# Agents: POST /repos/Gstyle11/opus-motion-library/dispatches
+#   {"event_type": "add-video", "client_payload": {"urls": "https://x.com/user/status/123 ..."}}
+# Manually: Actions tab → "Add video" → Run workflow.
+name: Add video
+
+on:
+  repository_dispatch:
+    types: [add-video]
+  workflow_dispatch:
+    inputs:
+      urls:
+        description: "X post link(s), separated by spaces or new lines"
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: library-write
+  cancel-in-progress: false
+
+jobs:
+  add:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Append links
+        env:
+          URLS: ${{ github.event.client_payload.urls || github.event.client_payload.url || inputs.urls }}
+        run: python3 scripts/add_links.py "$URLS"
+      - name: Commit
+        run: |
+          git config user.name "library-bot"
+          git config user.email "library-bot@users.noreply.github.com"
+          git add library.json
+          git diff --cached --quiet && { echo "nothing new"; exit 0; }
+          git commit -m "Add video(s) via ${{ github.event_name }}"
+          for i in 1 2 3; do git pull --rebase -q && git push -q && exit 0; sleep 3; done
+          exit 1

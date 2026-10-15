@@ -210,6 +210,15 @@
     .thread-text + .thread-text { margin-top: 8px; }
     .empty { text-align: center; color: #666; padding: 40px; grid-column: 1 / -1; }
     .ext { max-width: 1400px; margin: 0 auto 28px; }
+    .gh-state { font-size: 0.8rem; color: #888; }
+    .gh-state.on { color: #7fd18b; }
+    .gh-state.bad { color: #ff6b6b; }
+    .gh-panel ol { margin: 0 0 12px; padding-left: 20px; color: #ccc; font-size: 0.88rem; line-height: 1.6; }
+    .gh-panel ol b { color: #fff; font-weight: 600; }
+    .gh-panel code { background: #0f0f0f; padding: 1px 6px; border-radius: 4px; color: #ddd; }
+    .gh-panel a { color: #6ea8fe; }
+    .gh-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .gh-row input { flex: 1; min-width: 220px; }
     .ext-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
     .ext-head h2 { margin: 0; font-size: 1.1rem; font-weight: 600; }
     .ext-head h2 span { color: #777; font-weight: 400; }
@@ -233,7 +242,7 @@
 </head>
 <body>
   <h1>Opus 5.5 Motion Graphics Library</h1>
-  <p class="subtitle">Paste X post links, videos stream live from X. Data is saved in this browser.</p>
+  <p class="subtitle">Paste X post links, videos stream live from X. Saved to GitHub when connected.</p>
   <p class="total"><strong id="total">0</strong> <span id="totalLabel">videos in the library</span></p>
 
   <div class="quick-add">
@@ -250,7 +259,26 @@
     <label class="file-label">
       Import JSON
       <input type="file" id="importFile" accept=".json" hidden>
-    </label>  </div>
+    </label>
+    <button id="toggleGh">GitHub</button>
+    <span class="gh-state" id="ghState"></span>
+  </div>
+
+  <div class="add-form gh-panel" id="ghPanel">
+    <h3>Connect GitHub — save from any device</h3>
+    <ol>
+      <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens/new</a> (logged in as Gstyle11).</li>
+      <li><b>Token name:</b> e.g. <code>opus-library-iphone</code>. <b>Expiration:</b> the longest offered (up to 1 year).</li>
+      <li><b>Repository access:</b> “Only select repositories” → <code>Gstyle11/opus-motion-library</code>.</li>
+      <li><b>Permissions → Repository permissions → Contents:</b> “Read and write”. Nothing else.</li>
+      <li><b>Generate token</b>, copy it (shown only once, starts with <code>github_pat_</code>) and paste it below.</li>
+    </ol>
+    <div class="gh-row">
+      <input id="ghToken" type="password" autocomplete="off" placeholder="github_pat_…">
+      <button id="ghSave" class="primary">Connect</button>
+      <button id="ghDisconnect" type="button">Disconnect this device</button>
+    </div>
+  </div>
 
   <div class="add-form" id="addForm">
     <h3>Add a video manually</h3>
@@ -531,17 +559,6 @@
 
     let videos = loadVideos();
 
-    // Starter set grows over time: merge new starter videos into an existing library once per seed version
-    const SEED_KEY = 'opus55-motion-library-seed';
-    const SEED_VERSION = 3;
-    try {
-      if ((Number(localStorage.getItem(SEED_KEY)) || 0) < SEED_VERSION) {
-        const have = new Set(videos.map(v => v.id));
-        const added = defaultVideos.filter(d => !have.has(d.id)).map(d => ({ ...d }));
-        if (added.length) { videos = [...added, ...videos]; saveVideos(videos); }
-        localStorage.setItem(SEED_KEY, String(SEED_VERSION));
-      }
-    } catch {}
 
     // Fold state is a per-browser convenience: cards start folded, unfolded ids are remembered
     const OPEN_KEY = 'opus55-motion-library-open';
@@ -576,6 +593,179 @@
       saveVideos(videos);
       render();
     }
+
+    // ---------- GitHub sync: library.json / externals.json in the repo are the master ----------
+
+    const REPO = 'Gstyle11/opus-motion-library';
+    const BRANCH = 'main';
+    const TOKEN_KEY = 'opus55-gh-token';
+    const API = `https://api.github.com/repos/${REPO}`;
+
+    function getToken() { try { return localStorage.getItem(TOKEN_KEY) || ''; } catch { return ''; } }
+    function setToken(t) { try { t ? localStorage.setItem(TOKEN_KEY, t) : localStorage.removeItem(TOKEN_KEY); } catch {} }
+    let ghProblem = '';
+
+    function updateGhState() {
+      const el = document.getElementById('ghState');
+      el.className = 'gh-state ' + (ghProblem ? 'bad' : getToken() ? 'on' : '');
+      el.textContent = ghProblem || (getToken() ? 'Saving to GitHub' : 'Not connected: new videos stay on this device');
+    }
+
+    function ghHeaders(accept = 'application/vnd.github+json') {
+      const h = { Accept: accept, 'X-GitHub-Api-Version': '2022-11-28' };
+      const t = getToken();
+      if (t) h.Authorization = `Bearer ${t}`;
+      return h;
+    }
+
+    // UTF-8 safe base64 (post texts contain emoji and typographic quotes)
+    function b64decode(b64) {
+      const bin = atob(b64.replace(/\s/g, ''));
+      return new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0)));
+    }
+    function b64encode(text) {
+      const bytes = new TextEncoder().encode(text);
+      let bin = '';
+      for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      return btoa(bin);
+    }
+
+    // Agents may write just a URL string or { post }; give every entry an id
+    function normalizeEntry(e) {
+      if (typeof e === 'string') e = { post: e };
+      if (!e || typeof e !== 'object') return null;
+      const p = e.post && parsePostUrl(e.post);
+      return { ...e, id: e.id || (p && p.id) || ('v' + Math.random().toString(36).slice(2)) };
+    }
+    function normalizeExternal(e) {
+      if (typeof e === 'string') e = { url: e };
+      if (!e || !e.url) return null;
+      return { ...e, id: e.id || ('x' + Math.random().toString(36).slice(2)) };
+    }
+    function sameVideo(a, b) {
+      if (a.id === b.id) return true;
+      const pa = a.post && parsePostUrl(a.post), pb = b.post && parsePostUrl(b.post);
+      return !!(pa && pb && pa.id === pb.id && !String(a.id).includes('-') && !String(b.id).includes('-'));
+    }
+
+    async function readRemote(path) {
+      // Fresh read through the API (the Pages CDN can lag by minutes); fall back to the deployed file
+      try {
+        const res = await fetch(`${API}/contents/${path}?ref=${BRANCH}&t=${Date.now()}`,
+          { headers: ghHeaders('application/vnd.github.raw+json'), cache: 'no-store' });
+        if (res.status === 401) { ghProblem = 'GitHub key expired or invalid: reconnect'; updateGhState(); }
+        if (res.status === 404) return [];
+        if (res.ok) return JSON.parse(await res.text());
+      } catch {}
+      try {
+        const res = await fetch(`./${path}?t=${Date.now()}`, { cache: 'no-store' });
+        if (res.ok) return await res.json();
+      } catch {}
+      return null;
+    }
+
+    // Read-modify-write with the file's sha; GitHub rejects a stale sha, so retry on conflicts
+    async function updateRemote(path, mutate, message) {
+      if (!getToken()) return { ok: false, reason: 'not connected' };
+      for (let attempt = 0; attempt < 4; attempt++) {
+        let sha, list = [];
+        const meta = await fetch(`${API}/contents/${path}?ref=${BRANCH}&t=${Date.now()}`, { headers: ghHeaders(), cache: 'no-store' });
+        if (meta.status === 401 || meta.status === 403) {
+          ghProblem = meta.status === 401 ? 'GitHub key expired or invalid: reconnect' : 'GitHub key lacks write access to this repo';
+          updateGhState();
+          return { ok: false, reason: ghProblem };
+        }
+        if (meta.ok) {
+          const m = await meta.json();
+          sha = m.sha;
+          const text = m.content ? b64decode(m.content)
+            : await (await fetch(`${API}/contents/${path}?ref=${BRANCH}`, { headers: ghHeaders('application/vnd.github.raw+json'), cache: 'no-store' })).text();
+          list = JSON.parse(text);
+        } else if (meta.status !== 404) {
+          return { ok: false, reason: `GitHub ${meta.status}` };
+        }
+        const next = mutate(list);
+        if (JSON.stringify(next) === JSON.stringify(list)) return { ok: true, unchanged: true };
+        const put = await fetch(`${API}/contents/${path}`, {
+          method: 'PUT',
+          headers: { ...ghHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, branch: BRANCH, sha, content: b64encode(JSON.stringify(next, null, 2) + '\n') })
+        });
+        if (put.ok) { ghProblem = ''; updateGhState(); return { ok: true }; }
+        if (put.status !== 409 && put.status !== 422) return { ok: false, reason: `GitHub ${put.status}` };
+        await new Promise(r => setTimeout(r, 400 * (attempt + 1)));
+      }
+      return { ok: false, reason: 'GitHub kept reporting conflicts' };
+    }
+
+    // Strip nothing the next device needs; keep the file readable
+    const pushVideos = (entries, message) => updateRemote('library.json', list => {
+      const cur = list.map(normalizeEntry).filter(Boolean);
+      const fresh = entries.filter(e => !cur.some(c => sameVideo(c, e)));
+      return [...fresh, ...cur];
+    }, message);
+    const replaceVideos = (entries, message) => updateRemote('library.json', list =>
+      list.map(normalizeEntry).filter(Boolean).map(c => entries.find(e => sameVideo(c, e)) || c), message);
+    const deleteVideo = (entry, message) => updateRemote('library.json', list =>
+      list.map(normalizeEntry).filter(Boolean).filter(c => !sameVideo(c, entry)), message);
+
+    // Ids this device has seen on GitHub: a local video missing remotely was deleted elsewhere, unless it was never synced
+    const SYNCED_KEY = 'opus55-synced-ids';
+    function loadSet(key) { try { return new Set(JSON.parse(localStorage.getItem(key)) || []); } catch { return new Set(); } }
+    function saveSet(key, set) { try { localStorage.setItem(key, JSON.stringify([...set])); } catch {} }
+
+    async function syncVideos() {
+      const remote = await readRemote('library.json');
+      if (!Array.isArray(remote)) return;
+      const remoteList = remote.map(normalizeEntry).filter(Boolean);
+      const synced = loadSet(SYNCED_KEY);
+      const localOnly = videos.filter(v => !remoteList.some(r => sameVideo(r, v)) && !synced.has(v.id));
+      // Remote wins; fill fields a lean remote entry lacks (e.g. agent-added { post }) from the local copy
+      const merged = remoteList.map(r => { const l = videos.find(v => sameVideo(v, r)); return l ? { ...l, ...r } : r; });
+      remoteList.forEach(r => synced.add(r.id));
+      saveSet(SYNCED_KEY, synced);
+      commit([...localOnly, ...merged]);
+      if (localOnly.length && getToken()) {
+        const res = await pushVideos(localOnly, `Add ${localOnly.length} video(s) from ${navigator.platform || 'a device'}`);
+        if (res.ok) { localOnly.forEach(v => synced.add(v.id)); saveSet(SYNCED_KEY, synced);
+          setStatus(`Synced ${localOnly.length} video(s) from this device to GitHub.`); }
+      }
+    }
+
+    function markSynced(entries) {
+      const synced = loadSet(SYNCED_KEY);
+      entries.forEach(e => synced.add(e.id));
+      saveSet(SYNCED_KEY, synced);
+    }
+
+    document.getElementById('toggleGh').addEventListener('click', () => {
+      document.getElementById('ghPanel').classList.toggle('open');
+    });
+    document.getElementById('ghSave').addEventListener('click', async () => {
+      const t = document.getElementById('ghToken').value.trim();
+      if (!t) return;
+      const res = await fetch(API, { headers: { Accept: 'application/vnd.github+json', Authorization: `Bearer ${t}` } });
+      const repo = res.ok ? await res.json() : null;
+      if (!repo || !(repo.permissions && repo.permissions.push)) {
+        alert(res.status === 401 ? 'GitHub rejected this key.' : 'This key cannot write to Gstyle11/opus-motion-library. Check step 3 and 4.');
+        return;
+      }
+      setToken(t);
+      ghProblem = '';
+      document.getElementById('ghToken').value = '';
+      document.getElementById('ghPanel').classList.remove('open');
+      updateGhState();
+      setStatus('GitHub connected. Syncing…');
+      await syncVideos();
+      await syncExternals();
+      setStatus('GitHub connected. New videos are saved for every device.');
+    });
+    document.getElementById('ghDisconnect').addEventListener('click', () => {
+      setToken('');
+      ghProblem = '';
+      updateGhState();
+      setStatus('Disconnected. This device no longer saves to GitHub.');
+    });
 
     // ---------- X resolver (fxtwitter, vxtwitter fallback) ----------
 
@@ -860,7 +1050,17 @@
       });
 
       container.querySelectorAll('.remove-btn').forEach(btn => {
-        btn.addEventListener('click', () => commit(videos.filter(v => v.id !== btn.dataset.id)));
+        btn.addEventListener('click', async () => {
+          const entry = videos.find(v => v.id === btn.dataset.id);
+          commit(videos.filter(v => v.id !== btn.dataset.id));
+          if (!entry) return;
+          if (getToken()) {
+            const res = await deleteVideo(entry, `Remove ${entry.title}`);
+            setStatus(res.ok ? 'Removed from GitHub.' : `Removed on this device only (${res.reason}).`, !res.ok);
+          } else {
+            setStatus('Removed on this device only: connect GitHub to remove it everywhere.');
+          }
+        });
       });
       container.querySelectorAll('.prompt-btn').forEach(btn => {
         btn.addEventListener('click', () => openPrompt(btn.dataset.id));
@@ -889,6 +1089,7 @@
     // ---------- prompt modal ----------
 
     let modalId = null;
+    let promptAtOpen = '';
 
     function threadOf(v) {
       return v.thread && v.thread.length ? v.thread : [v.desc || ''];
@@ -898,6 +1099,7 @@
       const v = videos.find(x => x.id === id);
       if (!v) return;
       modalId = id;
+      promptAtOpen = v.prompt || '';
       document.getElementById('modalTitle').textContent = v.title;
       document.getElementById('promptText').value = v.prompt || '';
       document.getElementById('promptHint').textContent =
@@ -917,6 +1119,8 @@
 
     function closePrompt() {
       if (!modalId) return;
+      const edited = videos.find(v => v.id === modalId && v.promptEdited && v.prompt !== promptAtOpen);
+      if (edited) replaceVideos([edited], `Edit prompt: ${edited.title}`);
       modalId = null;
       document.getElementById('promptModal').classList.remove('open');
       render();
@@ -962,7 +1166,10 @@
 
     function mergeFresh(entry, fresh) {
       // Keep the user's own title/description, refresh everything X owns
-      return { ...entry, video: fresh.video, poster: fresh.poster, likes: fresh.likes,
+      // Lean entries added by agents ({ id, post }) take title, author and text from X too
+      return { ...entry, title: entry.title || fresh.title, author: entry.author || fresh.author,
+        desc: entry.desc || fresh.desc, post: entry.post || fresh.post,
+        video: fresh.video, poster: fresh.poster, likes: fresh.likes,
         duration: fresh.duration, width: fresh.width, height: fresh.height,
         thread: fresh.thread ?? entry.thread,
         prompt: entry.promptEdited ? entry.prompt : (fresh.prompt ?? entry.prompt) };
@@ -999,6 +1206,9 @@
       }
       commit(videos);
       setStatus(failed ? `Updated ${targets.length - failed}, ${failed} failed (post deleted or private?)` : `Updated ${targets.length} videos from X.`, failed > 0);
+      // Lean entries (agent-added links) become full entries in the repo, so other devices skip the lookup
+      const ids = new Set(targets.map(t => t.id));
+      if (getToken()) replaceVideos(videos.filter(v => ids.has(v.id)), `Refresh ${ids.size} video(s) from X`);
     }
 
     // ---------- add from X ----------
@@ -1030,6 +1240,17 @@
       field.value = failed.join('\n');
 
       const parts = [`Added ${added}`];
+      if (added) {
+        const fresh = videos.slice(0, added);
+        if (getToken()) {
+          setStatus('Saving to GitHub…');
+          const res = await pushVideos(fresh, `Add ${fresh.map(v => v.author || v.id).join(', ')}`);
+          if (res.ok) { markSynced(fresh); parts.push('saved to GitHub'); }
+          else parts.push(`only on this device (${res.reason})`);
+        } else {
+          parts.push('only on this device: connect GitHub to keep it everywhere');
+        }
+      }
       if (skipped) parts.push(`${skipped} already in library`);
       if (noVideo) parts.push(`${noVideo} without video`);
       if (failed.length) parts.push(`${failed.length} failed (left in the box)`);
@@ -1067,6 +1288,7 @@
         desc: document.getElementById('fDesc').value.trim()
       };
       commit([entry, ...videos]);
+      if (getToken()) pushVideos([entry], `Add ${entry.title}`).then(r => r.ok && markSynced([entry]));
       document.getElementById('addForm').classList.remove('open');
       document.querySelectorAll('#addForm input, #addForm textarea').forEach(el => el.value = '');
     });
@@ -1115,8 +1337,6 @@
     // ---------- external libraries ----------
 
     const EXT_KEY = 'opus55-external-libraries';
-    const EXT_SEED_KEY = 'opus55-external-libraries-seed';
-    const EXT_SEED_VERSION = 2;
     const defaultExternals = [
       {
         id: 'takayu-3d-motion-reference',
@@ -1139,13 +1359,6 @@
       try {
         const raw = localStorage.getItem(EXT_KEY);
         list = raw ? JSON.parse(raw) : defaultExternals.map(e => ({ ...e }));
-        // Merge new built-in sources into an existing list once per seed version
-        if ((Number(localStorage.getItem(EXT_SEED_KEY)) || 0) < EXT_SEED_VERSION) {
-          const have = new Set(list.map(e => e.id));
-          list = [...list, ...defaultExternals.filter(d => !have.has(d.id)).map(d => ({ ...d }))];
-          localStorage.setItem(EXT_KEY, JSON.stringify(list));
-          localStorage.setItem(EXT_SEED_KEY, String(EXT_SEED_VERSION));
-        }
       } catch {
         list = list || defaultExternals.map(e => ({ ...e }));
       }
@@ -1158,6 +1371,23 @@
       externals = list;
       try { localStorage.setItem(EXT_KEY, JSON.stringify(externals)); } catch {}
       renderExternals();
+    }
+
+    const EXT_SYNCED_KEY = 'opus55-external-synced-ids';
+    const sameExt = (a, b) => a.id === b.id || a.url.replace(/\/$/, '') === b.url.replace(/\/$/, '');
+    async function syncExternals() {
+      const remote = await readRemote('externals.json');
+      if (!Array.isArray(remote)) return;
+      const remoteList = remote.map(normalizeExternal).filter(Boolean);
+      const synced = loadSet(EXT_SYNCED_KEY);
+      const localOnly = externals.filter(e => !remoteList.some(r => sameExt(r, e)) && !synced.has(e.id));
+      remoteList.forEach(r => synced.add(r.id));
+      saveSet(EXT_SYNCED_KEY, synced);
+      commitExternals([...remoteList, ...localOnly]);
+      if (localOnly.length && getToken()) {
+        const res = await updateRemote('externals.json', list => [...list.map(normalizeExternal).filter(Boolean), ...localOnly], `Add ${localOnly.length} external librar${localOnly.length === 1 ? 'y' : 'ies'}`);
+        if (res.ok) { localOnly.forEach(e => synced.add(e.id)); saveSet(EXT_SYNCED_KEY, synced); }
+      }
     }
 
     function domainOf(url) {
@@ -1184,7 +1414,11 @@
           <button class="remove-btn" data-ext="${escapeHtml(e.id)}" aria-label="Remove ${escapeHtml(e.name || domainOf(e.url))}">Remove</button>
         </div>`).join('');
       box.querySelectorAll('[data-ext]').forEach(btn => {
-        btn.addEventListener('click', () => commitExternals(externals.filter(e => e.id !== btn.dataset.ext)));
+        btn.addEventListener('click', () => {
+          const entry = externals.find(e => e.id === btn.dataset.ext);
+          commitExternals(externals.filter(e => e.id !== btn.dataset.ext));
+          if (entry && getToken()) updateRemote('externals.json', list => list.map(normalizeExternal).filter(Boolean).filter(e => !sameExt(e, entry)), `Remove ${entry.name || entry.url}`);
+        });
       });
       // A preview image that fails to load falls back to the domain
       box.querySelectorAll('.ext-thumb img').forEach(img => {
@@ -1204,13 +1438,18 @@
       if (url && !/^https?:\/\//i.test(url)) url = 'https://' + url;
       if (!/^https?:\/\/[^\s.]+\.[^\s]+/i.test(url)) { alert('Please enter a website URL.'); return; }
       if (externals.some(e => e.url.replace(/\/$/, '') === url.replace(/\/$/, ''))) { alert('This library is already in the list.'); return; }
-      commitExternals([...externals, {
+      const entry = {
         id: 'x' + Date.now(),
         name: document.getElementById('extName').value.trim(),
         url,
         image: document.getElementById('extImage').value.trim(),
         note: document.getElementById('extNote').value.trim()
-      }]);
+      };
+      commitExternals([...externals, entry]);
+      if (getToken()) {
+        updateRemote('externals.json', list => [...list.map(normalizeExternal).filter(Boolean).filter(e => !sameExt(e, entry)), entry], `Add ${entry.name || entry.url}`)
+          .then(r => { if (r.ok) { const s = loadSet(EXT_SYNCED_KEY); s.add(entry.id); saveSet(EXT_SYNCED_KEY, s); } });
+      }
       document.getElementById('extForm').classList.remove('open');
       document.querySelectorAll('#extForm input, #extForm textarea').forEach(el => el.value = '');
     });
@@ -1219,9 +1458,13 @@
 
     render();
     renderExternals();
-    // Backfill posters/prompts for entries that never had them (e.g. the starter set, older saves)
-    const missing = videos.filter(v => v.post && (!v.poster || !('thread' in v)));
-    if (missing.length) refreshEntries(missing, 'Loading previews');
+    updateGhState();
+    (async () => {
+      await Promise.all([syncVideos(), syncExternals()]);
+      // Backfill posters/prompts for entries that never had them (agent-added links, older saves)
+      const missing = videos.filter(v => v.post && (!v.poster || !v.video || !('thread' in v)));
+      if (missing.length) refreshEntries(missing, 'Loading previews');
+    })();
   </script>
 </body>
 </html>

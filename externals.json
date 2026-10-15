@@ -1,0 +1,16 @@
+[
+  {
+    "id": "takayu-3d-motion-reference",
+    "name": "3D Motion Reference — Takayu Studio",
+    "url": "https://takayustudio.jp/3d-motion-reference/",
+    "image": "https://takayustudio.jp/3d-motion-reference/assets/og-image.png",
+    "note": "227 live 3D demos: depth, object motion, camera work, impacts, light and material, logo/product/game-UI 3D, sound-synced motion. Behind-the-scenes camera view, build notes for Three.js, CSS, After Effects and Blender. (Japanese)"
+  },
+  {
+    "id": "takayu-motion-reference",
+    "name": "Motion Reference — Takayu Studio",
+    "url": "https://motion-reference.takayustudio.jp/",
+    "image": "https://motion-reference.takayustudio.jp/assets/og-image.png",
+    "note": "Motion and easing dictionary: 782 demos searchable by name, speed, easing and feel. UI, games, scroll, forms, gestures, SVG, principles, springs, camera and transitions; 228 text motions with CSS, GSAP and After Effects how-tos. (Japanese)"
+  }
+]
